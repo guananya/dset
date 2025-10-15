@@ -15,17 +15,14 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             min-height: 100vh;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .container {
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 600px;
-            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
@@ -41,6 +38,8 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
         }
 
         .filter-group {
@@ -74,63 +73,50 @@
             border-color: #667eea;
         }
 
-        .audio-list {
-            margin-bottom: 20px;
+        .audio-grid {
+            display: grid;
+            gap: 20px;
         }
 
-        .audio-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .audio-item:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        .audio-item.active {
-            background: #667eea;
-            color: white;
-            border-color: #764ba2;
-        }
-
-        .audio-title {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        .audio-meta {
-            font-size: 13px;
-            opacity: 0.7;
-        }
-
-        .audio-item.active .audio-meta {
-            opacity: 0.9;
-        }
-
-        .player {
+        .audio-card {
             background: #f8f9fa;
             padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .audio-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .audio-filename {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 12px;
+            word-break: break-word;
         }
 
         audio {
             width: 100%;
-            margin-top: 10px;
+            height: 40px;
         }
 
         .no-results {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
             color: #999;
             font-style: italic;
+            font-size: 18px;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
 
         @media (max-width: 600px) {
@@ -164,49 +150,45 @@
             </div>
         </div>
 
-        <div class="audio-list" id="audioList"></div>
-
-        <div class="player" id="player" style="display: none;">
-            <div id="nowPlaying" style="margin-bottom: 10px; font-weight: 600;"></div>
-            <audio id="audioPlayer" controls></audio>
-        </div>
+        <div class="results-count" id="resultsCount"></div>
+        <div class="audio-grid" id="audioGrid"></div>
     </div>
 
     <script>
-        // YOUR AUDIO DATA - Replace with your actual S3 URLs
+        // YOUR AUDIO DATA - Structure matching your S3 bucket
+        const bucketUrl = "https://datademoh.s3.amazonaws.com";
+        
         const audioLibrary = [
+            // Arabic - 1-5 min
             {
-                title: "Introduction to Spanish",
-                url: "https://datademoh.s3.us-east-2.amazonaws.com/_1prKQ9EGRI__1prKQ9EGRI.wav?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAX3HORTKY2KCYJSOO%2F20251015%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20251015T162142Z&X-Amz-Expires=300&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEND%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMiJHMEUCIBYFITqM0l03a22vDf5sglXK9Mtnu%2BcsW3dQJ8kh7%2Fg4AiEA4ObaqmJMP83qYWTJoU%2F3h32NkyWIiEDwzIEKwf46MfIqmQIIeRAAGgw1Mzk1MTg2NzE1MzciDOKW8eaO5jj8giLVyCr2AZjDsJXvcM9nDdbQVbH7ZbtGG51ZIp%2Bd9Mg5DR3ZbHzMBjYurjIXcBoznip1huxQLYJJ9n9jIiucdzU6qAsx4DYenYVODI6E6cYv2IouFNdT4wLBtsQd0AoGZuf5%2BgNKgc0AFIMMyriN3JjvfiVQHJAjoZWxPtOxG3u%2B26oNwFMblm9k1PKdVmSo1kUkYjCevBNOfqsSZCcuUc%2BSD8%2BaPdPmt52GeRykjrYVNZyOVhhV9y%2Fa8HvdSI09WoW7i5krO4vwWlNG02Cq54ui%2FrKCz7l85iYuVGaAv8yTDCmzasVMM59H%2B9Fc8kaVKNMYoFL6S0oSwxdJVzCp%2Br7HBjrfAdkvZW4IFxdfIxD7Qoli4QFOL8Llzi4T0cdakiEmMLZx%2FwXQIT1tDpkcxdMBdjkgJnLE0fXE%2FRqqsHynLdZ1xD8wB98ldRw46GRWHqzHTfWhBtIR4iSlA2nCZP%2Fh4NDcDHXrTkCavvEd6sMEiPbgR2Z5lcBjZ86Gb3VVwl%2B6q7Pda%2F236OOFBZdwbdA51j8NvPMDRSqQGZhPHXWocV%2FzuasMzS8qsiUV%2FbtOOnpCYiLgeAOjyG1lh6ukyuDW76ptdCNAg33hPLslK5rEio1ssb8lpWLi3I5AawdI6H85AQ8%3D&X-Amz-Signature=2f594b0b591e18d2e865ee599d589d2ca53bf0a49e4145d4ea3904254ec831c7&X-Amz-SignedHeaders=host&response-content-disposition=inline",
-                language: "Spanish",
-                duration: "30-60 min"
+                language: "ar",
+                duration: "1-5 min",
+                url: `${bucketUrl}/ar/1-5_min/4QMjBz5NlRI_4QMjBz5NlRI.wav`
             },
             {
-                title: "Advanced French Conversation",
-                url: "https://your-bucket.s3.amazonaws.com/french-advanced.mp3",
-                language: "French",
-                duration: "60+ min"
+                language: "ar",
+                duration: "1-5 min",
+                url: `${bucketUrl}/ar/1-5_min/second_wav.wav`
             },
+            // Arabic - 5-15 min
             {
-                title: "German Basics",
-                url: "https://your-bucket.s3.amazonaws.com/german-basics.mp3",
-                language: "German",
-                duration: "0-30 min"
-            },
-            {
-                title: "Spanish Grammar Deep Dive",
-                url: "https://your-bucket.s3.amazonaws.com/spanish-grammar.mp3",
-                language: "Spanish",
-                duration: "60+ min"
-            },
-            {
-                title: "French Pronunciation Guide",
-                url: "https://your-bucket.s3.amazonaws.com/french-pronunciation.mp3",
-                language: "French",
-                duration: "30-60 min"
+                filename: "another_wav.wav",
+                language: "ar",
+                duration: "5-15 min",
+                url: `${bucketUrl}/ar/5-15_min/another_wav.wav`
             }
-            // Add more audio files here
+            // Add more audio files here following the same pattern
         ];
+
+        // Map language codes to display names (customize as needed)
+        const languageNames = {
+            'ar': 'Arabic',
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+            'de': 'German'
+            // Add more language mappings as needed
+        };
 
         // Extract unique languages and durations
         const languages = [...new Set(audioLibrary.map(audio => audio.language))].sort();
@@ -219,7 +201,7 @@
         languages.forEach(lang => {
             const option = document.createElement('option');
             option.value = lang;
-            option.textContent = lang;
+            option.textContent = languageNames[lang] || lang;
             languageSelect.appendChild(option);
         });
 
@@ -241,45 +223,30 @@
                 return langMatch && durMatch;
             });
 
-            displayAudioList(filtered);
+            displayAudioGrid(filtered);
         }
 
-        function displayAudioList(audioList) {
-            const listContainer = document.getElementById('audioList');
+        function displayAudioGrid(audioList) {
+            const gridContainer = document.getElementById('audioGrid');
+            const resultsCount = document.getElementById('resultsCount');
             
             if (audioList.length === 0) {
-                listContainer.innerHTML = '<div class="no-results">No audio files match your filters</div>';
+                gridContainer.innerHTML = '<div class="no-results">No audio files match your filters</div>';
+                resultsCount.textContent = '';
                 return;
             }
 
-            listContainer.innerHTML = audioList.map((audio, index) => `
-                <div class="audio-item" data-index="${index}" data-url="${audio.url}">
-                    <div class="audio-title">${audio.title}</div>
-                    <div class="audio-meta">${audio.language} • ${audio.duration}</div>
+            resultsCount.textContent = `Showing ${audioList.length} audio file${audioList.length !== 1 ? 's' : ''}`;
+
+            gridContainer.innerHTML = audioList.map(audio => `
+                <div class="audio-card">
+                    <div class="audio-filename">${audio.filename}</div>
+                    <audio controls preload="metadata">
+                        <source src="${audio.url}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
                 </div>
             `).join('');
-
-            // Add click handlers
-            document.querySelectorAll('.audio-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    playAudio(this.dataset.url, this.querySelector('.audio-title').textContent);
-                    
-                    // Update active state
-                    document.querySelectorAll('.audio-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        }
-
-        function playAudio(url, title) {
-            const player = document.getElementById('player');
-            const audioPlayer = document.getElementById('audioPlayer');
-            const nowPlaying = document.getElementById('nowPlaying');
-
-            player.style.display = 'block';
-            nowPlaying.textContent = `Now Playing: ${title}`;
-            audioPlayer.src = url;
-            audioPlayer.play();
         }
 
         // Event listeners
