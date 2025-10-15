@@ -406,8 +406,15 @@
             'ko': 'Korean'
         };
 
-        const languages = [...new Set(audioLibrary.map(audio => audio.language))].sort();
-        const durations = [...new Set(audioLibrary.map(audio => audio.duration))].sort();
+        const languages = [...new Set(audioLibrary.map(audio => audio.language))].sort((a, b) => {
+            if (a === 'en') return -1;  // English comes first
+            if (b === 'en') return 1;
+            return a.localeCompare(b);  // Rest alphabetically
+        });
+        const durationOrder = ['1-5 min', '5-15 min', '15-30 min', '30-60 min', '60plus min'];
+        const durations = durationOrder.filter(dur => 
+            audioLibrary.some(audio => audio.duration === dur)
+        );
 
         const languageSelect = document.getElementById('language');
         const durationSelect = document.getElementById('duration');
