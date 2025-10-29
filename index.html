@@ -570,7 +570,7 @@
                         <div class="audio-filename">${audio.filename}</div>
                         <div class="speaker-badge">${audio.num_speakers} ${audio.num_speakers === 1 ? 'Speaker' : 'Speakers'}</div>
                     </div>
-                    <audio controls preload="metadata">
+                    <audio controls preload="none">
                         <source src="${audio.url}" type="audio/${audio.filename.split('.').pop()}">
                         Your browser does not support the audio element.
                     </audio>
